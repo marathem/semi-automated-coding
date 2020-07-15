@@ -1,5 +1,55 @@
 # -*- coding: utf-8 -*-
 
+"""This script applies the search-style querying technique to a set of texts
+   and produces two kinds of output:
+   		1) precision, recall, F-score, and Scott's Pi values for 
+   			each text individually and averaged overall.
+   		2) a spreadsheet containing the code annotations made by the 
+   			search-style querying technique. This also classifies predicted 
+   			codes into three categories: correct codes (true positives), 
+   			wrong codes (false positives), and missed codes (false negatives).
+
+   BEFORE RUNNING THIS SCRIPT be sure to install the whoosh package (use pip), 
+   then customize and run the indexer script (indexer.py) to generate a 
+   Whoosh index.
+
+   The script does not accept command-line arguments. Instead, modify the 
+   values of these variables to customize input and output:
+   	- base_dir: path to the folder containing the raw and gold standard data.
+   		The raw data should be in a folder named 'uncoded' within base_dir.
+   		Raw data should contain turn-of-dialogue annotations in the BRAT format.
+
+   	- coder: name of the researcher whose coding we treat as gold standard.
+   		The gold standard data should be in a folder named 'coded_{coder}' 
+   		within base_dir. Gold standard annotations should follow the BRAT
+   		format. The gold standard folder is also expected to contain four 
+   		configuration files as follows.
+   			- annotation.conf (codebook): this is the list of all codes
+   			- visual.conf (codebook visuals): human-readable versions of codes
+   			- code_ignore.conf: the list of codes to ignore
+   			- code_query.conf: one search-style query per code
+
+	- index_dir: path to the folder containing the Whoosh search index.
+   	- result_dir: path to the output folder. The coded spreadsheets will 
+   		be saved in a folder named 'query_[coder]' within result_dir.
+   	- transcripts: a list of file names, one per text file to be coded. The
+   		appropriate un-coded and coded versions of each file must respectively 
+   		be present within base_dir/uncoded and base_dir/coded_{coder}.
+
+   The repository provides sample input and output as exemplars.
+   The sample input is in data/uncoded (raw data) and data/coded_jane (gold 
+   standard data coded by Jane). The sample output is in 
+   results/query_jane (an output spreadsheet). Configuration file examples
+   are included too; see data/coded_jane for formatting instructions. 
+
+   The most important configuration file for search-style querying is
+   code_query.conf, the one with search-style queries for the codebook!
+
+   See here for information about Whoosh: https://pypi.org/project/Whoosh/
+   And here for information about BRAT: https://brat.nlplab.org/index.html
+
+"""
+
 import os, os.path
 import codecs
 from whoosh import index
@@ -9,21 +59,21 @@ from whoosh.qparser import QueryParser
 from utils.indexer_utils import encoding, read_codes, read_annotations, write_spreadsheet_special, score_advanced, score
 from utils.entities import *
 
+base_dir = 'data'
+coder = 'jane'
+index_dir = 'index'
+result_dir = 'results'
+transcripts = ['1_token']
+
 class AnnotationResult:
 	annotation = None
 	correct_codes = set()
 	wrong_codes = set()
 	missed_codes = set()
 
-coder = 'jane'
-base_dir = 'data'
 input_dir = os.path.join(base_dir, 'uncoded')
 gold_dir = os.path.join(base_dir, 'coded_{0}'.format(coder))
-index_dir = 'index'
-result_dir = 'results'
 output_dir = os.path.join(result_dir, '{0}_{1}'.format('query', coder))
-
-transcripts = ['1_token']
 
 limit = None
 

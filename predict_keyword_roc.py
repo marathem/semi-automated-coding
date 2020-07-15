@@ -1,3 +1,45 @@
+# -*- coding: utf-8 -*-
+
+"""This script applies the simple keyword technique a text (or set of texts)
+	at score thresholds ranging from [0.0--0.5] with a 0.01 increment. For
+	each threshold value, it outputs the precision, recall, F-score, and 
+	Scott's Pi values. This produces a tabulated ROC curve per text that
+    helps in choosing a score threshold as follows.
+
+   The score threshold dictates the selectivity of the simple keyword 
+   technique's predictions: predicted annotations with scores below 
+   the threshold are ignored for improved precision. Typically, this
+   improved precision comes at the cost of a decrease in recall. The 
+   tabulated ROC curve helps us choose a threshold that achieves a balance
+   between precision, recall, and Scott's pi. This threshold can then
+   be used as the command-line input for predict_keyword.py.
+
+   This script does not generate any textual output other than the ROC curve.
+
+   Modify the values of these variables to customize input and output:
+   	- base_dir: path to the folder containing the raw and gold standard data.
+   		The raw data should be in a folder named 'uncoded' within base_dir.
+   	- coder: name of the researcher whose coding we treat as gold standard.
+   		The gold standard data should be in a folder named 'coded_{coder}' 
+   		within base_dir. Gold standard annotations should follow the BRAT
+   		format. The gold standard folder is also expected to contain three 
+   		configuration files as follows.
+   			- annotation.conf (codebook): this is the list of all codes
+   			- visual.conf (codebook visuals): human-readable versions of codes
+   			- code_ignore.conf: the list of codes to ignore
+   	- transcripts: a list of file names, one per text file to be coded. The
+   		appropriate un-coded and coded versions of each file must respectively 
+   		be present within base_dir/uncoded and base_dir/coded_{coder}.
+
+   	The repository provides sample input and output as exemplars.
+   	The sample input is in data/uncoded (raw data) and data/coded_jane (gold 
+   	standard data coded by Jane). Configuration file examples
+   	are included too; see data/coded_jane for formatting instructions.
+
+   	See here for information about BRAT: https://brat.nlplab.org/index.html
+
+"""
+
 import codecs
 import nltk
 import numpy as np
@@ -15,16 +57,16 @@ from utils.indexer_utils import read_codes_stopstem, read_annotations2, read_ign
 from utils.indexer_utils import read_annotations_special2, scotts_pi
 from utils.entities import Annotation
 
+base_dir = 'data'
+coder = 'jane'
+transcripts = ['1_token']
+
 encoding = 'utf-8'
 
 INVALID_NUMBER = -123.0
 
-coder = 'jane'
-base_dir = 'data'
 input_dir = os.path.join(base_dir, 'uncoded')
 gold_dir = os.path.join(base_dir, 'coded_{0}'.format(coder))
-
-transcripts = ['1_token']
 
 gold_annconf_file = os.path.join(gold_dir, 'annotation.conf')
 gold_visconf_file = os.path.join(gold_dir, 'visual.conf')
